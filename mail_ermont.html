@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>mail_ermont</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="retro.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<p>Bonjour !</p>
+<p>Comme je vous l’avais dit Vendredi matin, je programme <a
+href="https://www.github.com/Absobel/AbOSbel">mon kernel</a> (pour
+l’instant très modeste) et je suis tombé sur un problème que je n’arrive
+pas à résoudre.</p>
+<p>Pour un peu de contexte, je boot mon OS en utilisant grub et UEFI,
+ensuite j’utilise les informations de la structure de boot pour afficher
+du texte sur l’écran. Or la mise à jour de l’affichage est vraiment
+lente. D’après mes recherches, c’est à cause du fait que la zone mémoire
+du framebuffer est en mode Uncached (UC) et il faudrait qu’elle soit en
+mode Write-Combining (WC).</p>
+<p>Pour faire cela, il faut modifier des <a
+href="https://wiki.osdev.org/MTRR">registres MTRR</a> en suivant la
+documentation. J’ai donc d’abord écrit des fonctions pour lire et écrire
+dans ces registres en utilisant les instructions <code>rdmsr</code> et
+<code>wrmsr</code>.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Reads an entire byte using inline assembly</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> readmsr_byte(reg<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">x86_64::instructions::interrupts::</span>without_interrupts(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (eax<span class="op">,</span> edx)<span class="op">:</span> (<span class="dt">u32</span><span class="op">,</span> <span class="dt">u32</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">asm!</span>(</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;rdmsr&quot;</span><span class="op">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">in</span>(<span class="st">&quot;ecx&quot;</span>) reg<span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            out(<span class="st">&quot;eax&quot;</span>) eax<span class="op">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            out(<span class="st">&quot;edx&quot;</span>) edx<span class="op">,</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        ((edx <span class="kw">as</span> <span class="dt">usize</span>) <span class="op">&lt;&lt;</span> <span class="dv">32</span>) <span class="op">|</span> eax <span class="kw">as</span> <span class="dt">usize</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Writes an entire byte using inline assembly</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> writemsr_byte(reg<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> value<span class="op">:</span> <span class="dt">usize</span>) <span class="op">{</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">x86_64::instructions::interrupts::</span>without_interrupts(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> eax <span class="op">=</span> value <span class="kw">as</span> <span class="dt">u32</span><span class="op">;</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> edx <span class="op">=</span> (value <span class="op">&gt;&gt;</span> <span class="dv">32</span>) <span class="kw">as</span> <span class="dt">u32</span><span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        <span class="pp">asm!</span>(</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;wrmsr&quot;</span><span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>            <span class="kw">in</span>(<span class="st">&quot;ecx&quot;</span>) reg<span class="op">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            <span class="kw">in</span>(<span class="st">&quot;eax&quot;</span>) eax<span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            <span class="kw">in</span>(<span class="st">&quot;edx&quot;</span>) edx<span class="op">,</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        )<span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Uses the readmsr_byte function to read a range of bits</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> readmsr(reg<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> bits<span class="op">:</span> <span class="kw">impl</span> RangeTrait<span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> byte <span class="op">=</span> readmsr_byte(reg)<span class="op">;</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> mask <span class="op">=</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits<span class="op">.</span>end()) <span class="op">-</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits<span class="op">.</span>start())<span class="op">;</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    (byte <span class="op">&amp;</span> mask) <span class="op">&gt;&gt;</span> bits<span class="op">.</span>start()</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co">// Uses the previous functions to write a range of bits</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> writemsr(reg<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> bits<span class="op">:</span> <span class="kw">impl</span> RangeTrait<span class="op">&lt;</span><span class="dt">usize</span><span class="op">&gt;,</span> value<span class="op">:</span> <span class="dt">usize</span>) <span class="op">{</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> byte <span class="op">=</span> readmsr_byte(reg)<span class="op">;</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> mask <span class="op">=</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits<span class="op">.</span>end()) <span class="op">-</span> (<span class="dv">1</span> <span class="op">&lt;&lt;</span> bits<span class="op">.</span>start())<span class="op">;</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> new_byte <span class="op">=</span> (byte <span class="op">&amp;</span> <span class="op">!</span>mask) <span class="op">|</span> ((value <span class="op">&lt;&lt;</span> bits<span class="op">.</span>start()) <span class="op">&amp;</span> mask)<span class="op">;</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    writemsr_byte(reg<span class="op">,</span> new_byte)<span class="op">;</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Ensuite j’ai écrit une fonction pour mettre une zone mémoire en mode
+WC…</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> set_mtrr_wc(addr<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> size<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> MsrError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> has_msr_wc_support() <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        enable_mtrr()<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Find a free MTTR pair</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> mttr_pair_reg_nb <span class="op">=</span> mtrr_pair_reg_nb()<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> mttr_pair_reg <span class="op">=</span> <span class="cn">None</span><span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>mttr_pair_reg_nb <span class="op">{</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> mask_reg <span class="op">=</span> <span class="dv">0x201</span> <span class="op">+</span> i <span class="op">*</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> valid_bit <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> readmsr(mask_reg<span class="op">,</span> <span class="dv">11</span><span class="op">..=</span><span class="dv">11</span>) <span class="op">};</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> valid_bit <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                mttr_pair_reg <span class="op">=</span> <span class="cn">Some</span>((mask_reg <span class="op">-</span> <span class="dv">1</span><span class="op">,</span> mask_reg))<span class="op">;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use the MTTR pair to set the WC memory type to the given address range</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> WC_MEMORY_TYPE<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (base_reg<span class="op">,</span> mask_reg) <span class="op">=</span> mttr_pair_reg<span class="op">.</span>ok_or(<span class="pp">MsrError::</span>NoFreeMtrPairError)<span class="op">?;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// size must be aligned to a boundary of a power of two</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> mask <span class="op">=</span> <span class="op">!</span>(size<span class="op">.</span>next_power_of_two() <span class="op">-</span> <span class="dv">1</span>) <span class="op">&amp;</span> ((<span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">52</span>) <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>            writemsr(base_reg<span class="op">,</span> <span class="dv">12</span><span class="op">..=</span><span class="dv">51</span><span class="op">,</span> addr)<span class="op">;</span> <span class="co">// Set the base address</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>            writemsr(base_reg<span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">7</span><span class="op">,</span> WC_MEMORY_TYPE)<span class="op">;</span> <span class="co">// Set the memory type</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>            <span class="co">////// THIS LINE CAUSES THE GENERAL PROTECTION FAULT //////</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>            writemsr(mask_reg<span class="op">,</span> <span class="dv">12</span><span class="op">..=</span><span class="dv">51</span><span class="op">,</span> mask)<span class="op">;</span> <span class="co">// Set the mask       //</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>            <span class="co">///////////////////////////////////////////////////////////</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>            writemsr(mask_reg<span class="op">,</span> <span class="dv">11</span><span class="op">..=</span><span class="dv">11</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">;</span> <span class="co">// Set the valid bit</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        <span class="pp">serial_println!</span>(<span class="st">&quot;Done !&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(())</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(<span class="pp">MsrError::</span>NoMsrSupport)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>… que j’appelle avec l’addresse de la zone mémoire du framebuffer et
+sa taille</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>set_mtrr_wc(framebuffer_tag<span class="op">.</span>address() <span class="kw">as</span> <span class="dt">usize</span><span class="op">,</span> height <span class="op">*</span> pitch)<span class="op">.</span>expect(<span class="st">&quot;MTTR WC failed&quot;</span>)<span class="op">;</span></span></code></pre></div>
+<p>Ça fait bien plus d’une semaine que je suis sur ce problème et je
+n’arrive pas à le résoudre.</p>
+<p>Désolé de l’amas de code, j’espère avoir été assez clair dans mes
+explications. Merci beaucoup d’avoir pris le temps de lire !</p>
+<p>Bonne journée !<br />
+Ayoub Canon | 2-SN | Logiciel</p>
+</body>
+</html>
